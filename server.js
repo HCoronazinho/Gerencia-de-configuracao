@@ -1,12 +1,14 @@
 const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
-
 const path = require("path");
+
 const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname))); // apenas uma vez
+
 // 🔗 conexão com PostgreSQL
 const pool = new Pool({
   user: "henrique",
@@ -16,7 +18,7 @@ const pool = new Pool({
   port: 5432,
 });
 
-// 🔍 rota para listar lançamentos
+// 🔍 listar lançamentos
 app.get("/lancamentos", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM lancamento");
@@ -27,10 +29,7 @@ app.get("/lancamentos", async (req, res) => {
   }
 });
 
-app.listen(3000, () => {
-  console.log("Servidor rodando em http://localhost:3000");
-});
-
+// ➕ criar lançamento
 app.post("/lancamentos", async (req, res) => {
   const { descricao, data_lancamento, valor, tipo_lancamento, situacao } = req.body;
 
@@ -49,6 +48,7 @@ app.post("/lancamentos", async (req, res) => {
   }
 });
 
+// 🔐 login
 app.post("/login", async (req, res) => {
   const { login, senha } = req.body;
 
@@ -58,11 +58,7 @@ app.post("/login", async (req, res) => {
       [login, senha]
     );
 
-    if (result.rows.length > 0) {
-      res.json({ success: true });
-    } else {
-      res.json({ success: false });
-    }
+    res.json({ success: result.rows.length > 0 });
 
   } catch (err) {
     console.error(err);
@@ -70,6 +66,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-const path = require("path");
-
-app.use(express.static(path.join(__dirname)));
+// 🚀 iniciar servidor
+app.listen(3000, "0.0.0.0", () => {
+  console.log("Servidor rodando na porta 3000");
+});
