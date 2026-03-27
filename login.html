@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login</title>
+</head>
+<body>
+    
+  <h2>Login</h2>
+
+  <form id="loginForm">
+    <input type="text" id="login" placeholder="Login" required>
+    <input type="password" id="senha" placeholder="Senha" required>
+    <button type="submit">Entrar</button>
+  </form>
+
+  <script>
+    document.getElementById("loginForm").addEventListener("submit", e => {
+      e.preventDefault();
+
+      fetch("/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          login: document.getElementById("login").value,
+          senha: document.getElementById("senha").value
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.href = "/index.html";
+        } else {
+          alert("Login inválido");
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
