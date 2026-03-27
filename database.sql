@@ -1,5 +1,7 @@
+CREATE DATABASE controle_financeiro
+
 CREATE TABLE usuario (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     nome VARCHAR(100),
     login VARCHAR(50),
     senha VARCHAR(100),
@@ -7,7 +9,7 @@ CREATE TABLE usuario (
 );
 
 CREATE TABLE lancamento (
-    id INT PRIMARY KEY AUTO_INCREMENT,
+    id SERIAL PRIMARY KEY,
     descricao VARCHAR(255),
     data_lancamento DATE,
     valor DECIMAL(10,2),
