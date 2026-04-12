@@ -18,7 +18,40 @@ const pool = new Pool({
   port: 5432,
 });
 
-// 🔍 listar lançamentos
+// update lançamentos
+app.put("/lancamentos/:id", async (req, res) => {
+  const { id } = req.params;
+  const { descricao, data_lancamento, valor, tipo_lancamento, situacao } = req.body;
+
+  try {
+    await pool.query(
+      `UPDATE lancamento 
+       SET descricao=$1, data_lancamento=$2, valor=$3, tipo_lancamento=$4, situacao=$5
+       WHERE id=$6`,
+      [descricao, data_lancamento, valor, tipo_lancamento, situacao, id]
+    );
+
+    res.send("Atualizado com sucesso");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao atualizar");
+  }
+});
+
+// deletar lançamentos
+app.delete("/lancamentos/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query("DELETE FROM lancamento WHERE id=$1", [id]);
+    res.send("Excluído com sucesso");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Erro ao excluir");
+  }
+});
+
+//  listar lançamentos
 app.get("/lancamentos", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM lancamento");
@@ -29,7 +62,7 @@ app.get("/lancamentos", async (req, res) => {
   }
 });
 
-// ➕ criar lançamento
+//  criar lançamento
 app.post("/lancamentos", async (req, res) => {
   const { descricao, data_lancamento, valor, tipo_lancamento, situacao } = req.body;
 
@@ -41,7 +74,7 @@ app.post("/lancamentos", async (req, res) => {
       [descricao, data_lancamento, valor, tipo_lancamento, situacao]
     );
 
-    res.send("Lançamento criado com sucesso");
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
     res.status(500).send("Erro ao inserir");

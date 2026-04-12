@@ -1,12 +1,33 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-  <meta charset="UTF-8">
   <title>Controle Financeiro</title>
 </head>
 <body>
 
-  <h1>Lista de Lançamentos</h1>
+  <h2>Novo Lançamento</h2>
+
+  <form id="form">
+    <input type="text" id="descricao" placeholder="Descrição" required>
+    <input type="date" id="data" required>
+    <input type="number" id="valor" placeholder="Valor" required>
+
+    <select id="tipo">
+      <option value="RECEITA">Receita</option>
+      <option value="DESPESA">Despesa</option>
+    </select>
+
+    <select id="situacao">
+      <option value="PAGO">Pago</option>
+      <option value="PENDENTE">Pendente</option>
+    </select>
+
+    <button type="submit">Salvar</button>
+  </form>
+
+  <hr>
+
+  <h2>Lista de Lançamentos</h2>
 
   <table border="1">
     <thead>
@@ -17,12 +38,121 @@
         <th>Valor</th>
         <th>Tipo</th>
         <th>Situação</th>
+        <th>Ações</th>
       </tr>
     </thead>
-    <tbody id="tabela-lancamentos">
-    </tbody>
+    <tbody id="tabela"></tbody>
   </table>
 
-  <script src="script.js"></script>
+  <script>
+
+    let editandoId = null;
+
+    // 🔹 CARREGAR DADOS
+    function carregar() {
+      fetch("/lancamentos")
+        .then(res => res.json())
+        .then(data => {
+          const tabela = document.getElementById("tabela");
+          tabela.innerHTML = "";
+
+          data.forEach(l => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+              <td>${l.id}</td>
+              <td>${l.descricao}</td>
+              <td>${l.data_lancamento}</td>
+              <td>${l.valor}</td>
+              <td>${l.tipo_lancamento}</td>
+              <td>${l.situacao}</td>
+              <td>
+                <button onclick="prepararEdicao(${l.id}, '${l.descricao}', '${l.data_lancamento}', ${l.valor}, '${l.tipo_lancamento}', '${l.situacao}')">
+                  Editar
+                </button>
+                <button onclick="excluir(${l.id})">Excluir</button>
+              </td>
+            `;
+
+            tabela.appendChild(row);
+          });
+        });
+    }
+
+    // 🔹 EXCLUIR
+    function excluir(id) {
+      if (!confirm("Deseja excluir?")) return;
+
+      fetch(`/lancamentos/${id}`, {
+        method: "DELETE"
+      }).then(() => {
+        carregar();
+      });
+    }
+
+    // 🔹 PREPARAR EDIÇÃO
+    function prepararEdicao(id, descricao, data, valor, tipo, situacao) {
+      document.getElementById("descricao").value = descricao;
+      document.getElementById("data").value = data;
+      document.getElementById("valor").value = valor;
+      document.getElementById("tipo").value = tipo;
+      document.getElementById("situacao").value = situacao;
+
+      editandoId = id;
+    }
+
+    // 🔹 SALVAR (CREATE ou UPDATE)
+    document.getElementById("form").addEventListener("submit", e => {
+      e.preventDefault();
+
+      const dados = {
+  descricao: document.getElementById("descricao").value,
+  data_lancamento: document.getElementById("data").value,
+  valor: parseFloat(document.getElementById("valor").value),
+  tipo_lancamento: document.getElementById("tipo").value,
+  situacao: document.getElementById("situacao").value
+};
+
+      // 🔹 CREATE
+      if (editandoId === null) {
+        fetch("/lancamentos", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dados)
+        }).then(res => res.json())
+.then(() => {
+  limparForm();
+  carregar();
+})
+.catch(err => {
+  console.error(err);
+  alert("Erro ao salvar");
+});
+      }
+      // 🔹 UPDATE
+      else {
+        fetch(`/lancamentos/${editandoId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dados)
+        }).then(() => {
+          editandoId = null;
+          limparForm();
+          carregar();
+        });
+      }
+    });
+
+    // 🔹 LIMPAR FORM
+    function limparForm() {
+      document.getElementById("form").reset();
+      editandoId = null;
+    }
+
+    // 🔹 INICIALIZAR
+    carregar();
+
+  </script>
+
 </body>
 </html>
