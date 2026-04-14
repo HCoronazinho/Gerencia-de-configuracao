@@ -1,20 +1,22 @@
-CREATE DATABASE controle_financeiro
+CREATE DATABASE controle_financeiro;
+
+\c controle_financeiro;
 
 CREATE TABLE usuario (
     id SERIAL PRIMARY KEY,
-    nome VARCHAR(100),
-    login VARCHAR(50),
-    senha VARCHAR(100),
-    situacao VARCHAR(20)
+    nome VARCHAR(100) NOT NULL,
+    login VARCHAR(50) UNIQUE NOT NULL,
+    senha VARCHAR(100) NOT NULL,
+    situacao VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE lancamento (
     id SERIAL PRIMARY KEY,
-    descricao VARCHAR(255),
-    data_lancamento DATE,
-    valor DECIMAL(10,2),
-    tipo_lancamento VARCHAR(20),
-    situacao VARCHAR(20)
+    descricao VARCHAR(255) NOT NULL,
+    data_lancamento DATE NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    tipo_lancamento VARCHAR(20) NOT NULL,
+    situacao VARCHAR(20) NOT NULL
 );
 
 INSERT INTO usuario (nome, login, senha, situacao)
@@ -31,3 +33,7 @@ INSERT INTO lancamento (descricao, data_lancamento, valor, tipo_lancamento, situ
 ('Venda produto', '2026-03-15', 500.00, 'RECEITA', 'PAGO'),
 ('Combustível', '2026-03-18', 250.00, 'DESPESA', 'PAGO'),
 ('Investimento', '2026-03-20', 1000.00, 'RECEITA', 'PENDENTE');
+
+-- Permissões
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO henrique;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO henrique;

@@ -9,7 +9,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname))); // apenas uma vez
 
-// 🔗 conexão com PostgreSQL
+//conexão com banco postgres
 const pool = new Pool({
   user: "henrique",
   host: "localhost",
@@ -18,7 +18,7 @@ const pool = new Pool({
   port: 5432,
 });
 
-// update lançamentos
+// atualizar/update lançamentos
 app.put("/lancamentos/:id", async (req, res) => {
   const { id } = req.params;
   const { descricao, data_lancamento, valor, tipo_lancamento, situacao } = req.body;
@@ -81,7 +81,7 @@ app.post("/lancamentos", async (req, res) => {
   }
 });
 
-// 🔐 login
+// login
 app.post("/login", async (req, res) => {
   const { login, senha } = req.body;
 
@@ -99,7 +99,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// 🚀 iniciar servidor
+// iniciar servidor
 app.listen(3000, "0.0.0.0", () => {
-  console.log("Servidor rodando na porta 3000");
+  console.log("Tudo ok Caron, Servidor rodando na porta 3000");
 });
