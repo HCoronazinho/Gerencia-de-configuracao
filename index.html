@@ -28,6 +28,24 @@
   <hr>
 
   <h2>Lista de Lançamentos</h2>
+  <h2>Filtros</h2>
+
+<label>Data início:</label>
+<input type="date" id="dataInicio">
+
+<label>Data fim:</label>
+<input type="date" id="dataFim">
+
+<label>Situação:</label>
+<select id="situacaoFiltro">
+  <option value="TODOS">Todos</option>
+  <option value="PAGO">Pago</option>
+  <option value="PENDENTE">Pendente</option>
+</select>
+
+<button type="button" onclick="filtrar()">Filtrar</button>
+<button type="button" onclick="gerarPDF()">Gerar PDF</button>
+<tbody id="tabela"></tbody>
 
   <table border="1">
     <thead>
@@ -45,114 +63,125 @@
   </table>
 
   <script>
+  let editandoId = null;
 
-    let editandoId = null;
+  function montarQuery() {
+    const dataInicio = document.getElementById("dataInicio").value;
+    const dataFim = document.getElementById("dataFim").value;
+    const situacao = document.getElementById("situacaoFiltro").value;
 
-    // CARREGAR DADOS
-    function carregar() {
-      fetch("/lancamentos")
-        .then(res => res.json())
-        .then(data => {
-          const tabela = document.getElementById("tabela");
-          tabela.innerHTML = "";
+    const params = new URLSearchParams();
 
-          data.forEach(l => {
-            const row = document.createElement("tr");
+    if (dataInicio) params.append("dataInicio", dataInicio);
+    if (dataFim) params.append("dataFim", dataFim);
+    if (situacao && situacao !== "TODOS") params.append("situacao", situacao);
 
-            row.innerHTML = `
-              <td>${l.id}</td>
-              <td>${l.descricao}</td>
-              <td>${l.data_lancamento}</td>
-              <td>${l.valor}</td>
-              <td>${l.tipo_lancamento}</td>
-              <td>${l.situacao}</td>
-              <td>
-                <button onclick="prepararEdicao(${l.id}, '${l.descricao}', '${l.data_lancamento}', ${l.valor}, '${l.tipo_lancamento}', '${l.situacao}')">
-                  Editar
-                </button>
-                <button onclick="excluir(${l.id})">Excluir</button>
-              </td>
-            `;
+    return params.toString();
+  }
 
-            tabela.appendChild(row);
-          });
+  function carregar() {
+    const query = montarQuery();
+    const url = query ? `/lancamentos?${query}` : "/lancamentos";
+
+    console.log("Carregando:", url);
+
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        const tabela = document.getElementById("tabela");
+        tabela.innerHTML = "";
+
+        data.forEach(l => {
+          const dataFormatada = (l.data_lancamento || "").split("T")[0];
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${l.id}</td>
+            <td>${l.descricao}</td>
+            <td>${dataFormatada}</td>
+            <td>${l.valor}</td>
+            <td>${l.tipo_lancamento}</td>
+            <td>${l.situacao}</td>
+            <td>
+              <button type="button" onclick="prepararEdicao(${l.id}, '${l.descricao}', '${dataFormatada}', ${l.valor}, '${l.tipo_lancamento}', '${l.situacao}')">
+                Editar
+              </button>
+              <button type="button" onclick="excluir(${l.id})">Excluir</button>
+            </td>
+          `;
+          tabela.appendChild(row);
         });
-    }
-
-    // EXCLUIR
-    function excluir(id) {
-      if (!confirm("Deseja excluir?")) return;
-
-      fetch(`/lancamentos/${id}`, {
-        method: "DELETE"
-      }).then(() => {
-        carregar();
+      })
+      .catch(err => {
+        console.error("Erro ao carregar lançamentos:", err);
       });
-    }
+  }
 
-    // PREPARAR EDIÇÃO
-    function prepararEdicao(id, descricao, data, valor, tipo, situacao) {
-      document.getElementById("descricao").value = descricao;
-      document.getElementById("data").value = data;
-      document.getElementById("valor").value = valor;
-      document.getElementById("tipo").value = tipo;
-      document.getElementById("situacao").value = situacao;
-
-      editandoId = id;
-    }
-
-    // SALVAR (CREATE ou UPDATE)
-    document.getElementById("form").addEventListener("submit", e => {
-      e.preventDefault();
-
-      const dados = {
-  descricao: document.getElementById("descricao").value,
-  data_lancamento: document.getElementById("data").value,
-  valor: parseFloat(document.getElementById("valor").value),
-  tipo_lancamento: document.getElementById("tipo").value,
-  situacao: document.getElementById("situacao").value
-};
-
-      // CREATE
-      if (editandoId === null) {
-        fetch("/lancamentos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados)
-        }).then(res => res.json())
-.then(() => {
-  limparForm();
-  carregar();
-})
-.catch(err => {
-  console.error(err);
-  alert("Erro ao salvar");
-});
-      }
-      // UPDATE
-      else {
-        fetch(`/lancamentos/${editandoId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(dados)
-        }).then(() => {
-          editandoId = null;
-          limparForm();
-          carregar();
-        });
-      }
-    });
-
-    // LIMPAR FORM
-    function limparForm() {
-      document.getElementById("form").reset();
-      editandoId = null;
-    }
-
-    // INICIALIZAR
+  function filtrar() {
+    console.log("clicou filtrar");
     carregar();
+  }
 
-  </script>
+  function gerarPDF() {
+    const query = montarQuery();
+    const url = query ? `/relatorio/pdf?${query}` : "/relatorio/pdf";
+    window.open(url, "_blank");
+  }
+
+  document.getElementById("form").addEventListener("submit", e => {
+    e.preventDefault();
+
+    const dados = {
+      descricao: document.getElementById("descricao").value,
+      data_lancamento: document.getElementById("data").value,
+      valor: parseFloat(document.getElementById("valor").value),
+      tipo_lancamento: document.getElementById("tipo").value,
+      situacao: document.getElementById("situacao").value
+    };
+
+    const metodo = editandoId === null ? "POST" : "PUT";
+    const url = editandoId === null ? "/lancamentos" : `/lancamentos/${editandoId}`;
+
+    fetch(url, {
+      method: metodo,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(dados)
+    })
+    .then(res => res.json())
+    .then(() => {
+      limparForm();
+      carregar();
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Erro ao salvar");
+    });
+  });
+
+  function prepararEdicao(id, descricao, data, valor, tipo, situacao) {
+    document.getElementById("descricao").value = descricao;
+    document.getElementById("data").value = data;
+    document.getElementById("valor").value = valor;
+    document.getElementById("tipo").value = tipo;
+    document.getElementById("situacao").value = situacao;
+    editandoId = id;
+  }
+
+  function excluir(id) {
+    if (!confirm("Deseja excluir?")) return;
+
+    fetch(`/lancamentos/${id}`, { method: "DELETE" })
+      .then(() => carregar())
+      .catch(err => console.error(err));
+  }
+
+  function limparForm() {
+    document.getElementById("form").reset();
+    editandoId = null;
+  }
+
+  carregar();
+</script>
 
 </body>
 </html>
