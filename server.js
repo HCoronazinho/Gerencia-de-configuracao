@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const { Pool } = require("pg");
 const cors = require("cors");
@@ -5,6 +7,16 @@ const path = require("path");
 const PDFDocument = require("pdfkit");
 
 const app = express();
+
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
 
 app.use(cors());
 app.use(express.json());
@@ -26,16 +38,21 @@ app.put("/lancamentos/:id", async (req, res) => {
 
   try {
     await pool.query(
-      `UPDATE lancamento 
+      `UPDATE lancamento
        SET descricao=$1, data_lancamento=$2, valor=$3, tipo_lancamento=$4, situacao=$5
        WHERE id=$6`,
       [descricao, data_lancamento, valor, tipo_lancamento, situacao, id]
     );
 
-    res.send("Atualizado com sucesso");
+    await enviarEmail(
+      "Lançamento atualizado",
+      `Um lançamento foi alterado:\n\nID: ${id}\nDescrição: ${descricao}\nData: ${data_lancamento}\nValor: ${valor}\nTipo: ${tipo_lancamento}\nSituação: ${situacao}`
+    );
+
+    res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Erro ao atualizar");
+    res.status(500).json({ success: false });
   }
 });
 
@@ -97,12 +114,20 @@ app.post("/lancamentos", async (req, res) => {
       [descricao, data_lancamento, valor, tipo_lancamento, situacao]
     );
 
+    await enviarEmail(
+      "Novo lançamento cadastrado",
+      `Foi cadastrado um novo lançamento:\n\nDescrição: ${descricao}\nData: ${data_lancamento}\nValor: ${valor}\nTipo: ${tipo_lancamento}\nSituação: ${situacao}`
+    );
+
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).send("Erro ao inserir");
+    res.status(500).json({ success: false });
   }
 });
+
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
 
 //relatorios
 app.get("/relatorio/pdf", async (req, res) => {
@@ -176,6 +201,15 @@ app.post("/login", async (req, res) => {
     res.status(500).send("Erro no servidor");
   }
 });
+
+async function enviarEmail(assunto, texto) {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: process.env.EMAIL_TO,
+    subject: assunto,
+    text: texto
+  });
+}
 
 // iniciar servidor
 app.listen(3000, "0.0.0.0", () => {
