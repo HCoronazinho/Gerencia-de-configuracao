@@ -4,7 +4,6 @@ image: postgres:16
 container_name: controle_financeiro_db_homolog
 restart: always
 
-```
 environment:
   POSTGRES_USER: henrique
   POSTGRES_PASSWORD: 123456
@@ -18,14 +17,12 @@ volumes:
 
 networks:
   - rede_homolog
-```
 
 app:
 build: .
 container_name: controle_financeiro_app_homolog
 restart: always
 
-```
 ports:
   - "3001:3000"
 
@@ -37,7 +34,6 @@ depends_on:
 
 networks:
   - rede_homolog
-```
 
 volumes:
 postgres_data_homolog:
