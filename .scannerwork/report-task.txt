@@ -1,0 +1,7 @@
+organization=hcoronazinho
+projectKey=HCoronazinho_Gerencia-de-configuracao
+serverUrl=https://sonarcloud.io
+serverVersion=8.0.0.93065
+dashboardUrl=https://sonarcloud.io/dashboard?id=HCoronazinho_Gerencia-de-configuracao
+ceTaskId=AZ724uPzSJP2wF28VkWa
+ceTaskUrl=https://sonarcloud.io/api/ce/task?id=AZ724uPzSJP2wF28VkWa
