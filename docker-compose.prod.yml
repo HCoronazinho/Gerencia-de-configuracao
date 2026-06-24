@@ -1,46 +1,59 @@
+name: controle_financeiro_prod
+
+# Define os serviços (containers) que serão criados
 services:
-postgres:
-image: postgres:16
-container_name: controle_financeiro_db_prod
-restart: always
+  
+  # Serviço do Banco de Dados PostgreSQL
+  postgres:
+    image: postgres:16 # Usa a versão 16 oficial do Postgres
+    container_name: controle_financeiro_db_prod # Nome do container rodando
+    restart: always # Reinicia automaticamente se o container cair
 
-```
-environment:
-  POSTGRES_USER: henrique
-  POSTGRES_PASSWORD: 123456
-  POSTGRES_DB: controle_financeiro
+    # Variáveis de ambiente para criar o banco e as credenciais
+    environment:
+      POSTGRES_USER: henrique
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: controle_financeiro
 
-ports:
-  - "5432:5432"
+    # Mapeia a porta 5432 do seu computador para a porta 5432 do container
+    ports:
+      - "5434:5432"
 
+    # Salva os dados no volume e executa o script inicial 'database.sql'
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+      - ./database.sql:/docker-entrypoint-initdb.d/database.sql
+
+    # Conecta o banco à rede isolada de produção
+    networks:
+      - rede_prod
+
+  # Serviço da sua Aplicação (Node, Python, Go, etc.)
+  app:
+    build: . # Cria a imagem a partir do arquivo 'Dockerfile' na pasta atual
+    container_name: controle_financeiro_app_prod
+    restart: always
+
+    # Abre a porta 3000 para você acessar o app pelo navegador
+    ports:
+      - "3002:3000"
+
+    # Carrega outras variáveis de ambiente protegidas do arquivo '.env'
+    env_file:
+      - .env
+
+    # Garante que o app só vai iniciar DEPOIS que o Postgres estiver de pé
+    depends_on:
+      - postgres
+
+    # Conecta o app na mesma rede do banco para eles conversarem
+    networks:
+      - rede_prod
+
+# Cria o volume persistente para você não perder os dados se o container parar
 volumes:
-  - postgres_data_prod:/var/lib/postgresql/data
+  postgres_data_prod:
 
+# Cria a rede virtual para comunicação segura entre os containers
 networks:
-  - rede_prod
-```
-
-app:
-build: .
-container_name: controle_financeiro_app_prod
-restart: always
-
-```
-ports:
-  - "3000:3000"
-
-env_file:
-  - .env
-
-depends_on:
-  - postgres
-
-networks:
-  - rede_prod
-```
-
-volumes:
-postgres_data_prod:
-
-networks:
-rede_prod:
+  rede_prod:

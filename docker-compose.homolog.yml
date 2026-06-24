@@ -1,3 +1,5 @@
+name: controle_financeiro_homolog
+
 services:
   postgres:
     image: postgres:16
