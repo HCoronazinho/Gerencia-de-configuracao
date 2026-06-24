@@ -16,65 +16,84 @@ jobs:
         run: |
           set -xe
 
-          echo "=============================="
-          echo "PASSO 1 - Informações do runner"
-          echo "=============================="
+          echo "========================================"
+          echo "PASSO 1 - Informações do Runner"
+          echo "========================================"
           whoami
           pwd
           echo "HOME=$HOME"
 
-          echo "=============================="
+          echo "========================================"
           echo "PASSO 2 - Criando pasta .ssh"
-          echo "=============================="
+          echo "========================================"
           mkdir -p "$HOME/.ssh"
 
           ls -la "$HOME"
 
-          echo "=============================="
-          echo "PASSO 3 - Gravando chave"
-          echo "=============================="
+          echo "========================================"
+          echo "PASSO 3 - Gravando chave privada"
+          echo "========================================"
           echo "${{ secrets.VM_SSH_KEY }}" > "$HOME/.ssh/id_ed25519"
 
           echo "Arquivo criado."
 
-          echo "=============================="
+          echo "========================================"
           echo "PASSO 4 - Primeiras linhas da chave"
-          echo "=============================="
+          echo "========================================"
           head -3 "$HOME/.ssh/id_ed25519"
 
-          echo "=============================="
+          echo "========================================"
           echo "PASSO 5 - Ajustando permissões"
-          echo "=============================="
+          echo "========================================"
           chmod 600 "$HOME/.ssh/id_ed25519"
 
           ls -la "$HOME/.ssh"
 
-          echo "=============================="
+          echo "========================================"
           echo "PASSO 6 - Validando chave"
-          echo "=============================="
+          echo "========================================"
           ssh-keygen -lf "$HOME/.ssh/id_ed25519"
 
-          echo "=============================="
-          echo "PASSO 7 - Testando acesso à porta 22"
-          echo "=============================="
-          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> "$HOME/.ssh/known_hosts"
-
-          echo "known_hosts:"
-          cat "$HOME/.ssh/known_hosts"
-
-          echo "=============================="
-          echo "PASSO 8 - Configuração concluída"
-          echo "=============================="
-
-      - name: Testar conexão SSH
+      - name: Testar conectividade
         shell: bash
         run: |
+          set +e
+
+          echo "========================================"
+          echo "PASSO 7 - Ping"
+          echo "========================================"
+          ping -c 4 "${{ secrets.VM_HOST }}"
+
+          echo ""
+          echo "========================================"
+          echo "PASSO 8 - Porta 22"
+          echo "========================================"
+          nc -vz "${{ secrets.VM_HOST }}" 22
+
+          echo ""
+          echo "========================================"
+          echo "PASSO 9 - SSH Keyscan"
+          echo "========================================"
+          ssh-keyscan -T 10 -H "${{ secrets.VM_HOST }}"
+
+      - name: Testar SSH
+        shell: bash
+        run: |
+          set -xe
+
+          echo "========================================"
+          echo "PASSO 10 - Testando SSH"
+          echo "========================================"
+
           ssh \
             -vvv \
             -i "$HOME/.ssh/id_ed25519" \
-            -o StrictHostKeyChecking=yes \
+            -o StrictHostKeyChecking=no \
             "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" \
             "hostname && whoami && pwd"
 
       - name: Finalizado
-        run: echo "Teste concluído."
+        run: |
+          echo "========================================"
+          echo "TESTE CONCLUÍDO"
+          echo "========================================"
