@@ -5,21 +5,22 @@ on:
 
 jobs:
   teste:
-
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/checkout@v4
 
-      - name: Configurar chave SSH
+      - name: Configurar SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Testar conexão SSH
+      - name: Testar conexão
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
+          ssh -vvv \
+            -i ~/.ssh/id_ed25519 \
             -o StrictHostKeyChecking=yes \
             ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "hostname && whoami && pwd"
