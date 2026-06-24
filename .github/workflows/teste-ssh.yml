@@ -8,92 +8,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar SSH
-        shell: bash
+      - name: Configurar chave
         run: |
-          set -xe
-
-          echo "========================================"
-          echo "PASSO 1 - Informações do Runner"
-          echo "========================================"
-          whoami
-          pwd
-          echo "HOME=$HOME"
-
-          echo "========================================"
-          echo "PASSO 2 - Criando pasta .ssh"
-          echo "========================================"
-          mkdir -p "$HOME/.ssh"
-
-          ls -la "$HOME"
-
-          echo "========================================"
-          echo "PASSO 3 - Gravando chave privada"
-          echo "========================================"
-          echo "${{ secrets.VM_SSH_KEY }}" > "$HOME/.ssh/id_ed25519"
-
-          echo "Arquivo criado."
-
-          echo "========================================"
-          echo "PASSO 4 - Primeiras linhas da chave"
-          echo "========================================"
-          head -3 "$HOME/.ssh/id_ed25519"
-
-          echo "========================================"
-          echo "PASSO 5 - Ajustando permissões"
-          echo "========================================"
-          chmod 600 "$HOME/.ssh/id_ed25519"
-
-          ls -la "$HOME/.ssh"
-
-          echo "========================================"
-          echo "PASSO 6 - Validando chave"
-          echo "========================================"
-          ssh-keygen -lf "$HOME/.ssh/id_ed25519"
-
-      - name: Testar conectividade
-        shell: bash
-        run: |
-          set +e
-
-          echo "========================================"
-          echo "PASSO 7 - Ping"
-          echo "========================================"
-          ping -c 4 "${{ secrets.VM_HOST }}"
-
-          echo ""
-          echo "========================================"
-          echo "PASSO 8 - Porta 22"
-          echo "========================================"
-          nc -vz "${{ secrets.VM_HOST }}" 22
-
-          echo ""
-          echo "========================================"
-          echo "PASSO 9 - SSH Keyscan"
-          echo "========================================"
-          ssh-keyscan -T 10 -H "${{ secrets.VM_HOST }}"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
 
       - name: Testar SSH
-        shell: bash
         run: |
-          set -xe
-
-          echo "========================================"
-          echo "PASSO 10 - Testando SSH"
-          echo "========================================"
-
           ssh \
             -vvv \
-            -i "$HOME/.ssh/id_ed25519" \
+            -i ~/.ssh/id_ed25519 \
             -o StrictHostKeyChecking=no \
-            "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" \
+            -o UserKnownHostsFile=/dev/null \
+            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
             "hostname && whoami && pwd"
-
-      - name: Finalizado
-        run: |
-          echo "========================================"
-          echo "TESTE CONCLUÍDO"
-          echo "========================================"
