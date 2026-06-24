@@ -24,11 +24,11 @@ app.use(express.static(path.join(__dirname))); // apenas uma vez
 
 //conexão com banco postgres
 const pool = new Pool({
-  user: "henrique",
-  host: "localhost",
-  database: "controle_financeiro",
-  password: "123456",
-  port: 5432,
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT
 });
 
 // atualizar/update lançamentos
