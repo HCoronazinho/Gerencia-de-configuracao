@@ -8,8 +8,8 @@ git pull origin main
 
 echo "Reconstruindo containers..."
 
-sudo docker compose down
+sudo docker compose -f docker-compose.prod.yml down
 
-sudo docker compose up -d --build
+sudo docker compose -f docker-compose.prod.yml up -d --build
 
 echo "Atualizacao concluida."
