@@ -1,7 +1,3 @@
-CREATE DATABASE controle_financeiro;
-
-\c controle_financeiro;
-
 CREATE TABLE usuario (
     id SERIAL PRIMARY KEY,
     nome VARCHAR(100) NOT NULL,
