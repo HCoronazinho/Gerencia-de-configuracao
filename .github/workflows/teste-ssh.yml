@@ -8,19 +8,73 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Configurar SSH
+        shell: bash
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VM_SSH_KEY }}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.VM_HOST }} >> ~/.ssh/known_hosts
+          set -xe
 
-      - name: Testar conexão
+          echo "=============================="
+          echo "PASSO 1 - Informações do runner"
+          echo "=============================="
+          whoami
+          pwd
+          echo "HOME=$HOME"
+
+          echo "=============================="
+          echo "PASSO 2 - Criando pasta .ssh"
+          echo "=============================="
+          mkdir -p "$HOME/.ssh"
+
+          ls -la "$HOME"
+
+          echo "=============================="
+          echo "PASSO 3 - Gravando chave"
+          echo "=============================="
+          echo "${{ secrets.VM_SSH_KEY }}" > "$HOME/.ssh/id_ed25519"
+
+          echo "Arquivo criado."
+
+          echo "=============================="
+          echo "PASSO 4 - Primeiras linhas da chave"
+          echo "=============================="
+          head -3 "$HOME/.ssh/id_ed25519"
+
+          echo "=============================="
+          echo "PASSO 5 - Ajustando permissões"
+          echo "=============================="
+          chmod 600 "$HOME/.ssh/id_ed25519"
+
+          ls -la "$HOME/.ssh"
+
+          echo "=============================="
+          echo "PASSO 6 - Validando chave"
+          echo "=============================="
+          ssh-keygen -lf "$HOME/.ssh/id_ed25519"
+
+          echo "=============================="
+          echo "PASSO 7 - Testando acesso à porta 22"
+          echo "=============================="
+          ssh-keyscan -H "${{ secrets.VM_HOST }}" >> "$HOME/.ssh/known_hosts"
+
+          echo "known_hosts:"
+          cat "$HOME/.ssh/known_hosts"
+
+          echo "=============================="
+          echo "PASSO 8 - Configuração concluída"
+          echo "=============================="
+
+      - name: Testar conexão SSH
+        shell: bash
         run: |
-          ssh -vvv \
-            -i ~/.ssh/id_ed25519 \
+          ssh \
+            -vvv \
+            -i "$HOME/.ssh/id_ed25519" \
             -o StrictHostKeyChecking=yes \
-            ${{ secrets.VM_USER }}@${{ secrets.VM_HOST }} \
+            "${{ secrets.VM_USER }}@${{ secrets.VM_HOST }}" \
             "hostname && whoami && pwd"
+
+      - name: Finalizado
+        run: echo "Teste concluído."
