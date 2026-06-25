@@ -15,6 +15,13 @@ CREATE TABLE lancamento (
     situacao VARCHAR(20) NOT NULL
 );
 
+CREATE TABLE lancamentos_v2 (
+    id SERIAL PRIMARY KEY,
+    descricao VARCHAR(100),
+    valor NUMERIC(10,2),
+    data_lancamento DATE
+);
+
 INSERT INTO usuario (nome, login, senha, situacao)
 VALUES ('Henrique', 'admin', '123456', 'ATIVO');
 
