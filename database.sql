@@ -15,6 +15,11 @@ CREATE TABLE lancamento (
     situacao VARCHAR(20) NOT NULL
 );
 
+CREATE TABLE categoria (
+    id SERIAL PRIMARY KEY,
+    descricao VARCHAR(100),
+);
+
 INSERT INTO usuario (nome, login, senha, situacao)
 VALUES ('Henrique', 'admin', '123456', 'ATIVO');
 

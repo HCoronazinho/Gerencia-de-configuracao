@@ -3,6 +3,11 @@ function carregar() {
   const dataFim = document.getElementById("dataFim").value;
   const situacao = document.getElementById("situacaoFiltro").value;
 
+  const nome = "Henrique";
+  console.log(nome);
+  console.log(nome);
+
+
   const params = new URLSearchParams();
 
   if (dataInicio) params.append("dataInicio", dataInicio);
